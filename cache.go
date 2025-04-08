@@ -25,6 +25,12 @@ const (
 	NoExpiration time.Duration = -1
 )
 
+var (
+	ErrorKeyNotExists = fmt.Errorf("key not exists")
+	ErrorKeyExpired   = fmt.Errorf("key had expired")
+	ErrorMismatch     = fmt.Errorf("val type mismatch")
+)
+
 type Cache struct {
 	defaultExpiration time.Duration
 	items             map[string]*Item
@@ -32,45 +38,45 @@ type Cache struct {
 }
 
 var (
-	cacheEntity = &Cache{items: make(map[string]*Item)}
+	entity = &Cache{items: make(map[string]*Item)}
 )
 
 func SetExpiration(duration time.Duration) {
-	cacheEntity.defaultExpiration = duration
+	entity.defaultExpiration = duration
 }
 
 func Set(key string, value any, expire time.Duration) (err error) {
-	cacheEntity.mu.Lock()
-	defer cacheEntity.mu.Unlock()
+	entity.mu.Lock()
+	defer entity.mu.Unlock()
 
 	expiration := time.Now().Unix() + int64(expire.Seconds())
 	if expire == NoExpiration {
-		expiration = time.Now().Unix() + 100*365*86400 // 100年
+		expiration = 0
 	}
 
-	cacheEntity.items[key] = &Item{Object: value, Expiration: expiration}
+	entity.items[key] = &Item{Object: value, Expiration: expiration}
 	return
 }
 
 func Del(key string) (err error) {
-	cacheEntity.mu.Lock()
-	defer cacheEntity.mu.Unlock()
-	delete(cacheEntity.items, key)
+	entity.mu.Lock()
+	defer entity.mu.Unlock()
+	delete(entity.items, key)
 	return
 }
 
 func Get(key string) (value any, err error) {
-	cacheEntity.mu.RLock()
-	defer cacheEntity.mu.RUnlock()
+	entity.mu.RLock()
+	defer entity.mu.RUnlock()
 
-	item, exists := cacheEntity.items[key]
+	item, exists := entity.items[key]
 	if !exists {
-		err = fmt.Errorf("key not exists")
+		err = ErrorKeyNotExists
 		return
 	}
 
 	if item.Expired() {
-		err = fmt.Errorf("key had expired")
+		err = ErrorKeyExpired
 		return
 	}
 
@@ -86,7 +92,7 @@ func GetString(key string) (str string, err error) {
 
 	str, ok := value.(string)
 	if !ok {
-		err = fmt.Errorf("value not string")
+		err = ErrorMismatch
 		return
 	}
 
@@ -96,7 +102,7 @@ func GetString(key string) (str string, err error) {
 func GetObject(key string, container any) (err error) {
 	value, err := Get(key)
 	if err != nil {
-		return fmt.Errorf("failed to get value from cache for key %s: %w", key, err)
+		return
 	}
 
 	err = ReflectVal(value, container)

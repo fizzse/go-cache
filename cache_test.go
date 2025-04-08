@@ -31,3 +31,30 @@ func TestGetObject(t *testing.T) {
 		fmt.Println("User from cache:", u)
 	}
 }
+
+func TestList(t *testing.T) {
+	key := "list"
+
+	for i := 0; i < 5; i++ {
+		LPush(key, i+1)
+	}
+
+	for i := 0; i < 6; i++ {
+		fmt.Println(LPop(key))
+	}
+	for i := 0; i < 5; i++ {
+		LPush(key, i+1)
+	}
+
+	for i := 0; i < 6; i++ {
+		fmt.Println(RPop(key))
+	}
+
+	for i := 0; i < 5; i++ {
+		RPush(key, i+1)
+	}
+
+	for i := 0; i < 6; i++ {
+		fmt.Println(RPop(key))
+	}
+}
