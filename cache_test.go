@@ -14,7 +14,7 @@ func TestSet(t *testing.T) {
 	fmt.Println(a)
 }
 
-func TestGetContainer(t *testing.T) {
+func TestGetObject(t *testing.T) {
 	type User struct {
 		Name string
 		Age  int
@@ -24,7 +24,7 @@ func TestGetContainer(t *testing.T) {
 
 	// 获取缓存到结构体变量
 	var u User
-	err := GetContainer("user", &u)
+	err := GetObject("user", &u)
 	if err != nil {
 		fmt.Println("Get error:", err)
 	} else {

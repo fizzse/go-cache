@@ -9,7 +9,7 @@ import (
 )
 
 type Item struct {
-	Object     interface{}
+	Object     any
 	Expiration int64
 }
 
@@ -52,6 +52,13 @@ func Set(key string, value any, expire time.Duration) (err error) {
 	return
 }
 
+func Del(key string) (err error) {
+	cacheEntity.mu.Lock()
+	defer cacheEntity.mu.Unlock()
+	delete(cacheEntity.items, key)
+	return
+}
+
 func Get(key string) (value any, err error) {
 	cacheEntity.mu.RLock()
 	defer cacheEntity.mu.RUnlock()
@@ -86,7 +93,7 @@ func GetString(key string) (str string, err error) {
 	return
 }
 
-func GetContainer(key string, container any) (err error) {
+func GetObject(key string, container any) (err error) {
 	value, err := Get(key)
 	if err != nil {
 		return fmt.Errorf("failed to get value from cache for key %s: %w", key, err)
